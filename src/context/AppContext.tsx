@@ -20,6 +20,7 @@ type AppAction =
   | { type: "ADD_REPORT"; payload: Report }
   | { type: "UPDATE_REPORT"; payload: Report }
   | { type: "DELETE_REPORT"; payload: string }
+  | { type: "REQUEST_REVISION"; payload: { reportId: string; staffName: string; revisionNotes: string } }
 
 const calculateReportProgress = (assignments: TaskAssignment[]): number => {
   if (!assignments || assignments.length === 0) return 0
@@ -156,6 +157,41 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         reports: state.reports.filter((report) => report.id !== action.payload),
       }
+    case "REQUEST_REVISION":
+      return {
+        ...state,
+        reports: state.reports.map((report) => {
+          if (report.id === action.payload.reportId) {
+            const updatedAssignments = report.assignments.map((assignment) => {
+              if (assignment.staffName === action.payload.staffName) {
+                return {
+                  ...assignment,
+                  status: "revision-requested" as const,
+                  revisionNotes: action.payload.revisionNotes,
+                  revisionRequestedAt: new Date().toISOString(),
+                }
+              }
+              return assignment
+            })
+
+            return {
+              ...report,
+              assignments: updatedAssignments,
+              workflow: [
+                ...report.workflow,
+                {
+                  id: `w${report.workflow.length + 1}`,
+                  action: `Revisi diminta untuk ${action.payload.staffName}`,
+                  user: state.currentUser?.name || "Koordinator",
+                  timestamp: new Date().toISOString(),
+                  status: "completed",
+                },
+              ],
+            }
+          }
+          return report
+        }),
+      }
     default:
       return state
   }
@@ -166,10 +202,18 @@ const AppContext = createContext<{
   dispatch: React.Dispatch<AppAction>
   calculateProgress: (assignments: TaskAssignment[]) => number
   getReportStatus: (assignments: TaskAssignment[]) => string
+  requestRevision?: (reportId: string, staffName: string, revisionNotes: string) => void
 } | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState)
+
+  const requestRevision = (reportId: string, staffName: string, revisionNotes: string) => {
+    dispatch({
+      type: "REQUEST_REVISION",
+      payload: { reportId, staffName, revisionNotes },
+    })
+  }
 
   const enhancedState = {
     ...state,
@@ -187,6 +231,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dispatch,
         calculateProgress: calculateReportProgress,
         getReportStatus: determineReportStatus,
+        requestRevision,
       }}
     >
       {children}

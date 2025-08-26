@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 import { useApp } from "../../context/AppContext"
-import { Clipboard, Filter, Eye, UserPlus } from "lucide-react"
+import { Clipboard, Filter, Eye, UserPlus, AlertTriangle } from "lucide-react"
 import { SERVICES } from "../../types"
 import { ReportDetailsModal } from "../modals/ReportDetailsModal"
 import { AddStaffModal } from "../modals/AddStaffModal"
+import { RevisionModal } from "../modals/RevisionModal"
 
 export function CoordinatorDashboard() {
   const { state } = useApp()
   const [serviceFilter, setServiceFilter] = useState("")
   const [selectedReport, setSelectedReport] = useState(null)
   const [addStaffReport, setAddStaffReport] = useState(null)
+  const [revisionReport, setRevisionReport] = useState(null)
 
   const assignedReports = state.reports.filter(
     (report) =>
@@ -60,6 +62,10 @@ export function CoordinatorDashboard() {
 
   const handleAddStaff = (report) => {
     setAddStaffReport(report)
+  }
+
+  const handleSendRevision = (report) => {
+    setRevisionReport(report)
   }
 
   return (
@@ -164,6 +170,15 @@ export function CoordinatorDashboard() {
                         <UserPlus className="w-4 h-4" />
                         Tambah Staff
                       </button>
+                      {report.assignments && report.assignments.length > 0 && (
+                        <button
+                          onClick={() => handleSendRevision(report)}
+                          className="flex items-center gap-2 px-3 py-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <AlertTriangle className="w-4 h-4" />
+                          Kirim Revisi
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -182,6 +197,7 @@ export function CoordinatorDashboard() {
 
       {selectedReport && <ReportDetailsModal report={selectedReport} onClose={() => setSelectedReport(null)} />}
       {addStaffReport && <AddStaffModal report={addStaffReport} onClose={() => setAddStaffReport(null)} />}
+      {revisionReport && <RevisionModal report={revisionReport} onClose={() => setRevisionReport(null)} />}
     </div>
   )
 }

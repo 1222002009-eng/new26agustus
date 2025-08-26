@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useApp } from "../../context/AppContext"
-import { CheckSquare, Clock, Send } from "lucide-react"
+import { CheckSquare, Clock, Send, AlertTriangle } from "lucide-react"
 
 export function StaffDashboard() {
   const { state, dispatch } = useApp()
@@ -160,12 +160,26 @@ export function StaffDashboard() {
             </div>
 
             <div className="p-6">
-              {getCurrentUserAssignment(selectedTask)?.revisionNotes && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <h4 className="font-medium text-red-800 mb-2">Catatan Revisi:</h4>
+              {getCurrentUserAssignment(selectedTask)?.needsRevision && (
+                <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <h4 className="font-medium text-red-800">Perlu Revisi</h4>
+                  </div>
                   <p className="text-red-700 text-sm">{getCurrentUserAssignment(selectedTask)?.revisionNotes}</p>
+                  <p className="text-red-600 text-xs mt-2 font-medium">
+                    Silakan perbaiki tugas sesuai catatan di atas dan kerjakan ulang.
+                  </p>
                 </div>
               )}
+
+              {getCurrentUserAssignment(selectedTask)?.revisionNotes &&
+                !getCurrentUserAssignment(selectedTask)?.needsRevision && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h4 className="font-medium text-red-800 mb-2">Catatan Revisi:</h4>
+                    <p className="text-red-700 text-sm">{getCurrentUserAssignment(selectedTask)?.revisionNotes}</p>
+                  </div>
+                )}
 
               <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-3">Daftar Tugas:</h4>
